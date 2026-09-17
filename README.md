@@ -1,160 +1,98 @@
-# Expense Ledger & Payment Service
+# Widget AI
 
-A production-ready microservice engineered with FastAPI and SQLite. Provides row-level tenant isolation, retry-safe write operations, actionable validation feedback, and automated test coverage.
+A high-performance, optimized AI assistant featuring a dynamic glass-morphic interface, sub-second Groq inference, session history management, and custom theme switching.
 
-**Live Service URL:** https://expense-ledger-service.vercel.app  
-**Interactive Documentation:** https://expense-ledger-service.vercel.app/docs
-
----
-
-## Data Model & Architecture
-
-### Payments Table
-
-```sql
-CREATE TABLE payments (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    recipient TEXT NOT NULL,
-    amount REAL NOT NULL,
-    currency TEXT NOT NULL,
-    idempotency_key TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, idempotency_key)
-);
-```
-
-**Purpose:** Append-only ledger for all transactions  
-**user_id:** Maps to tenant credentials (token_user_1, token_user_2, etc.)  
-**Relationships:** 1-to-many between tenant and transaction history
+**Live Demo:** https://widget-ai.duckdns.org
 
 ---
 
-## Constraints & System Invariants
+## Features
 
-| Constraint | Type | Prevention |
-|:---|:---|:---|
-| `UNIQUE(user_id, idempotency_key)` | Composite Unique Constraint | Prevents duplicate mutations from retries or double-submissions |
-| `user_id NOT NULL` | Column Invariant | Prevents orphan records without tenant ownership |
-| `id PRIMARY KEY AUTOINCREMENT` | Primary Key | Guarantees sequential identity across transactions |
-| `PRAGMA foreign_keys = ON;` | Database Integrity | Ensures relational consistency |
-
----
-
-## Query Optimization
-
-### Recommended Index
-
-```sql
-CREATE INDEX idx_payments_user_id_id_desc ON payments(user_id, id DESC);
-```
-
-### High-Load Query
-
-```sql
-SELECT id, recipient, amount, currency, idempotency_key, created_at 
-FROM payments 
-WHERE user_id = ? 
-ORDER BY id DESC;
-```
-
-**Without Index:** Full table scan + in-memory sort  
-**With Index:** `O(log N + K)` indexed search
+- **Dynamic Landing State**: Clean central launch view with randomized quick-start prompt chips that smoothly transition into a chat session
+- **High-Speed Inference**: Open-weights models on Groq LPUs for instant token streaming
+- **Adaptive UI/UX**: Fully responsive layout optimized for mobile keyboards and desktop viewports with seamless hover-triggered history sidebar
+- **Customizable Settings**: Modal toggle for typing stream animation and chat history clearing
+- **Theme Customization**: Native light and dark mode with minimalist vector icons
 
 ---
 
-## Scalability at 10x Traffic
+## Tech Stack
 
-### Bottlenecks & Solutions
-
-**Unbounded List Query**
-- Problem: Memory exhaustion, network latency
-- Solution: Enforce cursor-based pagination (limit=50, starting_after=<id>)
-
-**File Lock Contention**
-- Problem: SQLite file-level locking during writes blocks concurrent requests
-- Solution: Migrate to PostgreSQL with PgBouncer connection pooling
+| Component | Technology |
+| --- | --- |
+| Backend | Python, Flask |
+| LLM Provider | Groq Cloud API |
+| Frontend | Vanilla JavaScript, HTML5, CSS3, Marked.js |
+| Hosting | Render |
+| DNS Routing | DuckDNS |
 
 ---
 
-## API Endpoints
-
-| Method | Endpoint | Auth | Headers | Status Codes | Description |
-|:---|:---|:---|:---|:---|:---|
-| GET | / | No | None | 200 OK | Service status ping |
-| GET | /health | No | None | 200 OK | Health check |
-| POST | /payments | Yes | Authorization, Idempotency-Key | 201 Created, 200 OK, 400 Bad Request, 401 Unauthorized | Create payment or return existing |
-| GET | /payments | Yes | Authorization | 200 OK, 401 Unauthorized | Retrieve all user payments |
-| GET | /payments/{id} | Yes | Authorization | 200 OK, 401 Unauthorized, 404 Not Found | Retrieve specific payment |
-
----
-
-## Test Credentials
+## Project Structure
 
 ```
-User 1: Authorization: Bearer token_user_1
-User 2: Authorization: Bearer token_user_2
+├── app.py              # Flask server and Groq API proxy
+├── requirements.txt    # Python dependencies
+├── .env                # Environment keys (Git ignored)
+└── templates/
+    └── index.html      # Complete single-file frontend
 ```
-
-**Supported Currencies:** USD, EUR, GBP, PKR
 
 ---
 
-## Local Development & Testing
+## Getting Started
 
-### Clone Repository
+### Local Development
 
+1. Clone the repository:
 ```bash
-git clone https://github.com/abdullah-ali-338/expense-ledger-service.git
-cd expense-ledger-service
+git clone https://github.com/your-username/widget-ai.git
+cd widget-ai
 ```
 
-### Install Dependencies
+2. Set up a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+```
 
+3. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-### Run Automated Tests
-
-```bash
-python -m pytest test_service.py
+4. Create a `.env` file in the root:
+```
+GROQ_API_KEY=your_actual_groq_api_key_here
 ```
 
-### Run Local Development Server
-
+5. Run the application:
 ```bash
-python -m uvicorn main:app --reload --port 8000
+python app.py
 ```
+
+Open `http://localhost:5000` in your browser.
 
 ---
 
-## Example Requests
+## Deployment
 
-### Create Payment
+### Render Configuration
 
-```bash
-curl -X POST https://expense-ledger-service.vercel.app/payments \
-  -H "Authorization: Bearer token_user_1" \
-  -H "Idempotency-Key: unique-key-123" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "recipient": "john@example.com",
-    "amount": 50.00,
-    "currency": "USD"
-  }'
-```
+1. Connect your GitHub repository as a New Web Service on Render
+2. Build Command: `pip install -r requirements.txt`
+3. Start Command: `python app.py`
+4. Add environment variable under Environment settings:
+   - `GROQ_API_KEY`: Your Groq API key
 
-### Get All Payments
+### Custom Domain (DuckDNS)
 
-```bash
-curl -X GET https://expense-ledger-service.vercel.app/payments \
-  -H "Authorization: Bearer token_user_1"
-```
+1. Register a subdomain at [DuckDNS](https://www.duckdns.org/)
+2. Map it to your Render deployment IP
+3. Add your custom domain under Settings > Custom Domains in Render dashboard
 
-### Get Specific Payment
+---
 
-```bash
-curl -X GET https://expense-ledger-service.vercel.app/payments/1 \
-  -H "Authorization: Bearer token_user_1"
-```
+## License
+
+This project is for educational and personal purposes.
