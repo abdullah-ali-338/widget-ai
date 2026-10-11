@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Widget AI</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Widget AI">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2309090b'/><text y='.9em' font-size='65' x='18' fill='%235eead4' font-family='monospace' font-weight='bold'>&gt;_</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -946,6 +952,20 @@
             transform: translateX(18px);
         }
 
+        .primary-btn {
+            background: var(--primary);
+            border: none;
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        .primary-btn:hover { opacity: 0.85; }
+
         .danger-btn {
             background: rgba(239, 68, 68, 0.12);
             border: 1px solid rgba(239, 68, 68, 0.25);
@@ -1130,6 +1150,14 @@
                 </button>
             </div>
             
+            <div class="setting-row" id="install-row" style="display:none">
+                <div class="setting-info">
+                    <label>Install App</label>
+                    <span>Add Widget AI to your home screen</span>
+                </div>
+                <button class="primary-btn" id="install-btn" type="button">Install</button>
+            </div>
+
             <div class="setting-row">
                 <div class="setting-info">
                     <label>Typing Animation</label>
@@ -1342,7 +1370,10 @@
         const sunIcon = `<circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>`;
 
         function renderThemeIcon() {
-            themeIcon.innerHTML = document.body.classList.contains('light-mode') ? sunIcon : moonIcon;
+            const isLight = document.body.classList.contains('light-mode');
+            themeIcon.innerHTML = isLight ? sunIcon : moonIcon;
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', isLight ? '#f7f7f8' : '#0f0f0f');
         }
 
         const savedTheme = localStorage.getItem('theme');
@@ -1584,6 +1615,36 @@
         });
 
         initChats();
+
+        // ---- PWA: service worker + install button ----
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+
+        let deferredInstall = null;
+        const installRow = document.getElementById('install-row');
+        const installBtn = document.getElementById('install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstall = e;
+            installRow.style.display = 'flex';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredInstall) return;
+            deferredInstall.prompt();
+            await deferredInstall.userChoice;
+            deferredInstall = null;
+            installRow.style.display = 'none';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstall = null;
+            installRow.style.display = 'none';
+        });
     </script>
 </body>
 </html>
