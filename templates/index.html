@@ -185,6 +185,93 @@
             font-weight: 600;
         }
 
+        .sidebar-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-left: 6px;
+        }
+
+        .sidebar-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .sidebar-close {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            border-radius: 9px;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-close:hover {
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .sidebar.force-hide {
+            transform: translateX(-100%) !important;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .history-title {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .history-delete {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 6px;
+            display: grid;
+            place-items: center;
+            opacity: 0;
+            flex-shrink: 0;
+            transition: opacity 0.15s ease, color 0.15s ease;
+        }
+
+        .history-item:hover .history-delete { opacity: 1; }
+        .history-delete:hover { color: #ef4444; background: var(--surface); }
+
+        .history-delete svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+        }
+
+        .history-empty {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        @media (hover: none) {
+            .history-delete { opacity: 0.7; }
+        }
+
         .sidebar-bottom {
             border-top: 1px solid var(--border);
             padding-top: 12px;
@@ -233,22 +320,34 @@
             pointer-events: none;
         }
 
-        .mobile-menu-btn {
-            display: none;
+        .sidebar-toggle {
             pointer-events: auto;
-            background: transparent;
-            border: none;
-            color: var(--text);
-            padding: 4px;
+            width: 38px;
+            height: 38px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 11px;
             cursor: pointer;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            color: var(--text);
+            transition: all 0.2s ease;
         }
 
-        .mobile-menu-btn svg {
-            width: 22px;
-            height: 22px;
+        .sidebar-toggle:hover {
+            background: var(--surface-hover);
+        }
+
+        .sidebar-toggle svg,
+        .sidebar-close svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
             stroke: currentColor;
-            stroke-width: 2;
+            stroke-width: 1.8;
             stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .theme-toggle {
@@ -343,7 +442,7 @@
 
         body.chat-active .header-brand {
             top: 16px;
-            left: 24px;
+            left: 68px;
             transform: translate(0, 0);
             flex-direction: row;
             gap: 10px;
@@ -871,10 +970,6 @@
                 right: 16px;
             }
 
-            .mobile-menu-btn {
-                display: block;
-            }
-
             .header-brand {
                 top: 45%;
                 left: 50%;
@@ -903,7 +998,7 @@
 
             body.chat-active .header-brand {
                 top: 14px;
-                left: 50px;
+                left: 62px;
                 transform: none;
                 gap: 8px;
             }
@@ -952,15 +1047,20 @@
     <div class="sidebar-hover-zone" id="hover-zone"></div>
 
     <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top">
+            <span class="sidebar-title">Widget AI</span>
+            <button class="sidebar-close" id="sidebar-close" aria-label="Close sidebar">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"></rect><line x1="9" y1="4" x2="9" y2="20"></line></svg>
+            </button>
+        </div>
+
         <button class="new-chat-btn" onclick="startNewChat()">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             New Chat
         </button>
 
         <div class="history-section-title">Recent Chats</div>
-        <div class="history-list" id="history-list">
-            <div class="history-item active">General Session</div>
-        </div>
+        <div class="history-list" id="history-list"></div>
 
         <div class="sidebar-bottom">
             <button class="sidebar-btn" id="open-settings-btn">
@@ -971,12 +1071,8 @@
     </aside>
 
     <header>
-        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle sidebar">
-            <svg viewBox="0 0 24 24">
-                <line x1="3" y1="7" x2="21" y2="7"></line>
-                <line x1="3" y1="12" x2="21" y2="12"></line>
-                <line x1="3" y1="17" x2="21" y2="17"></line>
-            </svg>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"></rect><line x1="9" y1="4" x2="9" y2="20"></line></svg>
         </button>
 
         <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
@@ -1064,15 +1160,153 @@
         const themeIcon = document.getElementById('theme-icon');
         const sidebar = document.getElementById('sidebar');
         const headerBrand = document.getElementById('header-brand');
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
         const modalOverlay = document.getElementById('modal-overlay');
         const openSettingsBtn = document.getElementById('open-settings-btn');
         const closeSettingsBtn = document.getElementById('close-settings-btn');
         const quickChips = document.getElementById('quick-chips');
         const inputWrapper = document.getElementById('input-wrapper');
+        const historyList = document.getElementById('history-list');
+        const sidebarClose = document.getElementById('sidebar-close');
 
-        // Conversation memory: full history of the current chat, sent with every request
-        let chatHistory = [];
+        // ---- Chat memory + saved chats (localStorage) ----
+        const CHATS_KEY = 'widgetai_chats';
+        const CURRENT_KEY = 'widgetai_current';
+        const MAX_SAVED_CHATS = 50;
+
+        let chatHistory = [];     // messages of the open chat, sent with every request
+        let currentChatId = null;
+
+        function readChats() {
+            try {
+                const data = JSON.parse(localStorage.getItem(CHATS_KEY));
+                return Array.isArray(data) ? data : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function writeChats(chats) {
+            try { localStorage.setItem(CHATS_KEY, JSON.stringify(chats)); } catch (e) {}
+        }
+
+        function setCurrentId(id) {
+            currentChatId = id;
+            try {
+                if (id) localStorage.setItem(CURRENT_KEY, id);
+                else localStorage.removeItem(CURRENT_KEY);
+            } catch (e) {}
+        }
+
+        function newChatId() {
+            return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        }
+
+        function makeTitle(messages) {
+            const first = messages.find(m => m.role === 'user');
+            const text = first ? first.content.replace(/\s+/g, ' ').trim() : 'New chat';
+            return text.length > 40 ? text.slice(0, 40) + '…' : text;
+        }
+
+        function saveChat(id, messages) {
+            const chats = readChats();
+            const idx = chats.findIndex(c => c.id === id);
+
+            if (!messages.length) {
+                if (idx !== -1) chats.splice(idx, 1);
+            } else if (idx === -1) {
+                chats.push({ id, title: makeTitle(messages), messages, updated: Date.now() });
+            } else {
+                chats[idx].messages = messages;
+                chats[idx].updated = Date.now();
+            }
+
+            chats.sort((a, b) => b.updated - a.updated);
+            writeChats(chats.slice(0, MAX_SAVED_CHATS));
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const chats = readChats();
+            historyList.innerHTML = '';
+
+            if (!chats.length) {
+                const empty = document.createElement('div');
+                empty.className = 'history-empty';
+                empty.textContent = 'No saved chats yet';
+                historyList.appendChild(empty);
+                return;
+            }
+
+            chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = 'history-item' + (chat.id === currentChatId ? ' active' : '');
+
+                const title = document.createElement('span');
+                title.className = 'history-title';
+                title.textContent = chat.title;
+
+                const del = document.createElement('button');
+                del.className = 'history-delete';
+                del.type = 'button';
+                del.setAttribute('aria-label', 'Delete chat');
+                del.innerHTML = '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    loadChat(chat.id);
+                });
+
+                del.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteChat(chat.id);
+                });
+
+                item.appendChild(title);
+                item.appendChild(del);
+                historyList.appendChild(item);
+            });
+        }
+
+        function loadChat(id) {
+            const chat = readChats().find(c => c.id === id);
+            if (!chat) return;
+
+            setCurrentId(id);
+            chatHistory = chat.messages.slice();
+            chatContainer.innerHTML = '';
+            document.body.classList.add('chat-active');
+
+            chatHistory.forEach(m => {
+                if (m.role === 'user') {
+                    appendMessage(m.content, 'user-message', false, m.time);
+                } else {
+                    const { msgDiv, metaDiv } = appendMessage('', 'bot-message', false, m.time);
+                    msgDiv.innerHTML = marked.parse(m.content);
+                    addCopyButton(metaDiv, m.content);
+                }
+            });
+
+            sidebar.classList.remove('mobile-open');
+            renderHistoryList();
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function deleteChat(id) {
+            writeChats(readChats().filter(c => c.id !== id));
+            if (id === currentChatId) {
+                startNewChat();
+            } else {
+                renderHistoryList();
+            }
+        }
+
+        function initChats() {
+            renderHistoryList();
+            let saved = null;
+            try { saved = localStorage.getItem(CURRENT_KEY); } catch (e) {}
+            if (saved) loadChat(saved);
+        }
 
         const questionBank = [
             "Explain DNS resolution in simple terms",
@@ -1123,10 +1357,19 @@
             localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         });
 
-        mobileMenuBtn.addEventListener('click', (e) => {
+        sidebarToggle.addEventListener('click', (e) => {
             e.stopPropagation();
+            sidebar.classList.remove('force-hide');
             sidebar.classList.toggle('mobile-open');
         });
+
+        sidebarClose.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar.classList.remove('mobile-open');
+            sidebar.classList.add('force-hide');
+        });
+
+        sidebar.addEventListener('mouseleave', () => sidebar.classList.remove('force-hide'));
 
         headerBrand.addEventListener('click', () => {
             if (document.body.classList.contains('chat-active')) {
@@ -1135,7 +1378,7 @@
         });
 
         document.addEventListener('click', (e) => {
-            if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target) && !headerBrand.contains(e.target)) {
+            if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target) && !headerBrand.contains(e.target)) {
                 sidebar.classList.remove('mobile-open');
             }
         });
@@ -1176,11 +1419,14 @@
 
         function clearAllHistory() {
             modalOverlay.classList.remove('active');
+            if (!confirm('Delete all saved chats?')) return;
+            try { localStorage.removeItem(CHATS_KEY); } catch (e) {}
             startNewChat();
         }
 
         function startNewChat() {
             chatHistory = [];
+            setCurrentId(null);
             chatContainer.innerHTML = '';
             document.body.classList.remove('chat-active');
             sidebar.classList.remove('mobile-open');
@@ -1188,13 +1434,14 @@
             input.style.height = '26px';
             inputWrapper.style.transform = '';
             renderShuffledChips();
+            renderHistoryList();
         }
 
         function getFormattedTime() {
             return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
         }
 
-        function appendMessage(text, className, isThinking = false) {
+        function appendMessage(text, className, isThinking = false, time = null) {
             const messageGroup = document.createElement('div');
             messageGroup.className = `message-group ${className === 'user-message' ? 'user' : 'bot'}`;
 
@@ -1215,7 +1462,7 @@
 
             const timeDiv = document.createElement('span');
             timeDiv.className = 'message-time';
-            timeDiv.textContent = getFormattedTime();
+            timeDiv.textContent = time || getFormattedTime();
             metaDiv.appendChild(timeDiv);
 
             wrapper.appendChild(msgDiv);
@@ -1282,8 +1529,17 @@
                 document.body.classList.add('chat-active');
             }
 
-            appendMessage(message, 'user-message');
-            chatHistory.push({ role: 'user', content: message });
+            if (!currentChatId) setCurrentId(newChatId());
+
+            // local refs so a reply still lands in the right chat if the user switches chats mid-request
+            const chatId = currentChatId;
+            const history = chatHistory;
+            const time = getFormattedTime();
+
+            appendMessage(message, 'user-message', false, time);
+            history.push({ role: 'user', content: message, time });
+            saveChat(chatId, history);
+
             input.value = '';
             input.style.height = '24px';
             input.closest('.input-box').style.alignItems = 'center';
@@ -1295,21 +1551,24 @@
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ messages: chatHistory })
+                    body: JSON.stringify({ messages: history })
                 });
 
                 const data = await response.json();
-                
+
                 if (data.reply) {
-                    chatHistory.push({ role: 'assistant', content: data.reply });
+                    history.push({ role: 'assistant', content: data.reply, time: getFormattedTime() });
+                    saveChat(chatId, history);
                     streamMarkdownText(msgDiv, data.reply, metaDiv);
                 } else {
-                    chatHistory.pop();
+                    history.pop();
+                    saveChat(chatId, history);
                     msgDiv.classList.remove('thinking');
                     msgDiv.textContent = data.error || 'No response received.';
                 }
             } catch (err) {
-                chatHistory.pop();
+                history.pop();
+                saveChat(chatId, history);
                 msgDiv.classList.remove('thinking');
                 msgDiv.textContent = 'Server connection failed. Please try again.';
             } finally {
@@ -1323,6 +1582,8 @@
             if (!message) return;
             handleSubmit(message);
         });
+
+        initChats();
     </script>
 </body>
 </html>
