@@ -1071,6 +1071,9 @@
         const quickChips = document.getElementById('quick-chips');
         const inputWrapper = document.getElementById('input-wrapper');
 
+        // Conversation memory: full history of the current chat, sent with every request
+        let chatHistory = [];
+
         const questionBank = [
             "Explain DNS resolution in simple terms",
             "Write a Python script to scrape website title",
@@ -1177,6 +1180,7 @@
         }
 
         function startNewChat() {
+            chatHistory = [];
             chatContainer.innerHTML = '';
             document.body.classList.remove('chat-active');
             sidebar.classList.remove('mobile-open');
@@ -1279,6 +1283,7 @@
             }
 
             appendMessage(message, 'user-message');
+            chatHistory.push({ role: 'user', content: message });
             input.value = '';
             input.style.height = '24px';
             input.closest('.input-box').style.alignItems = 'center';
@@ -1290,18 +1295,21 @@
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ messages: chatHistory })
                 });
 
                 const data = await response.json();
                 
                 if (data.reply) {
+                    chatHistory.push({ role: 'assistant', content: data.reply });
                     streamMarkdownText(msgDiv, data.reply, metaDiv);
                 } else {
+                    chatHistory.pop();
                     msgDiv.classList.remove('thinking');
                     msgDiv.textContent = data.error || 'No response received.';
                 }
             } catch (err) {
+                chatHistory.pop();
                 msgDiv.classList.remove('thinking');
                 msgDiv.textContent = 'Server connection failed. Please try again.';
             } finally {
