@@ -10,6 +10,8 @@ app = Flask(__name__)
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
+MAX_HISTORY = 20  # last N messages sent to the model
+
 SYSTEM_PROMPT = """
 You are Widget AI, a concise and sharp technical assistant.
 
@@ -29,17 +31,25 @@ def home():
 def chat():
     try:
         data = request.get_json(silent=True) or {}
-        user_msg = data.get("message", "").strip()
+        history = data.get("messages", [])
 
-        if not user_msg:
+        if not isinstance(history, list) or not history:
+            return jsonify({"error": "Message cannot be empty."}), 400
+
+        clean = [
+            {"role": m["role"], "content": str(m["content"])}
+            for m in history
+            if isinstance(m, dict)
+            and m.get("role") in ("user", "assistant")
+            and m.get("content")
+        ][-MAX_HISTORY:]
+
+        if not clean:
             return jsonify({"error": "Message cannot be empty."}), 400
 
         completion = client.chat.completions.create(
             model="openai/gpt-oss-20b",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_msg}
-            ],
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + clean,
             temperature=0.3,
             max_tokens=350
         )
