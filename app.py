@@ -1,6 +1,6 @@
 import os
 import sys
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -26,6 +26,18 @@ Rules:
 @app.route("/")
 def home():
     return render_template("index.html")
+
+@app.route("/manifest.webmanifest")
+def manifest():
+    return send_from_directory(app.static_folder, "manifest.webmanifest",
+                               mimetype="application/manifest+json")
+
+@app.route("/sw.js")
+def service_worker():
+    # served from the root so the worker can control the whole site
+    resp = send_from_directory(app.static_folder, "sw.js", mimetype="application/javascript")
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 @app.route("/chat", methods=["POST"])
 def chat():
